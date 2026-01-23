@@ -212,7 +212,7 @@ class ServiceOfferViewSet(
             print("calling update offer status")
             third_party_api_url = f"{settings.THIRD_PARTY_API_BASE}/requests/service-offers/update-status/"
             payload = {
-                "id": offer.external_id,
+                "id": str(offer.external_id) ,
                 "status": offer_status
             }
             call_third_party_api(url=third_party_api_url, payload=payload)
