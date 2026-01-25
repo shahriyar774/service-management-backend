@@ -187,10 +187,11 @@ class ServiceRequestViewSet(
                     "offer_deadline": service_request.offer_deadline.isoformat(),
                     "word_mode": "Remote"
                 }
-                call_third_party_api(url=third_party_api_url, payload=payload)
+                response = call_third_party_api(url=third_party_api_url, payload=payload)
 
             except Exception as e:
-                pass
+                print(f"Failed to call 3rd party API: {str(e)}")
+                raise Exception(f"Failed to update 3rd party API: {str(e)}")
 
         try:
             complete_task(

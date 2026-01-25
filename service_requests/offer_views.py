@@ -7,6 +7,7 @@ from django.conf import settings
 
 from .models import ServiceOffer
 from .serializers import ServiceOfferSerializer
+from service_orders.models import ServiceOrder
 from flowable_client import *
 
 
@@ -200,25 +201,25 @@ class ServiceOfferViewSet(
         # generate service request in 3rd party app
         if decision == "final_approval":
             offer_status = "ACCEPTED"
-        elif decision == "approved":
-            offer_status = "UNDER_REVIEW"
-        else:
+        elif decision == "final_rejection":
             offer_status = "REJECTED"
+        else:
+            offer_status = "UNDER_REVIEW"
 
         offer.status = offer_status
         offer.save()
 
         try:
-            print("calling update offer status")
             third_party_api_url = f"{settings.THIRD_PARTY_API_BASE}/requests/service-offers/update-status/"
             payload = {
-                "id": offer.external_id,
+                "id": str(offer.external_id) ,
                 "status": offer_status
             }
-            call_third_party_api(url=third_party_api_url, payload=payload)
+            response = call_third_party_api(url=third_party_api_url, payload=payload)
 
         except Exception as e:
-            pass
+            print(f"Failed to call 3rd party API: {str(e)}")
+            raise Exception(f"Failed to update 3rd party API: {str(e)}")
         
         # Step 1: Complete Flowable task
         try:
@@ -231,6 +232,29 @@ class ServiceOfferViewSet(
             return Response(
                 {'error': f'Failed to submit counter offer: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # create service order
+        if offer.status == 'ACCEPTED' or decision == "final_approval":
+            service_order = ServiceOrder.objects.create(
+                title=offer.service_request.title,
+                service_request_id=offer.service_request.id,
+                winning_offer_id=offer.id,
+                supplier_id=offer.provider_id,
+                start_date=offer.service_request.start_date,
+                current_end_date=offer.service_request.end_date,
+                original_end_date=offer.service_request.end_date,
+                supplier_name=offer.provider_name,
+                current_specialist_id=offer.specialist_id,
+                current_specialist_name=offer.specialist_name,
+                original_specialist_id=offer.specialist_id,
+                original_specialist_name=offer.specialist_name,
+                role=offer.service_request.role_name,
+                current_man_days=offer.service_request.expected_man_days,
+                original_man_days=offer.service_request.expected_man_days,
+                daily_rate=offer.daily_rate,
+                original_contract_value=offer.total_cost,
+                current_contract_value=offer.total_cost,
             )
         
         return Response({
