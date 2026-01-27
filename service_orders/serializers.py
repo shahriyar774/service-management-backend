@@ -15,6 +15,7 @@ class ServiceOrderDetailSerializer(serializers.ModelSerializer):
     can_request_substitution = serializers.SerializerMethodField()
     pending_extension_id = serializers.SerializerMethodField()
     pending_substitution_id = serializers.SerializerMethodField()
+    pm_pending_subid = serializers.SerializerMethodField()
     
     class Meta:
         model = ServiceOrder
@@ -38,6 +39,14 @@ class ServiceOrderDetailSerializer(serializers.ModelSerializer):
         latest_subs = obj.substitutions.order_by('-created_at').first()
         
         if latest_subs and latest_subs.status == 'PENDING_SUPPLIER':
+            return latest_subs.id
+        
+        return None
+
+    def get_pm_pending_subid(self, obj):
+        latest_subs = obj.substitutions.order_by('-created_at').first()
+        
+        if latest_subs and latest_subs.status == 'PENDING_CLIENT':
             return latest_subs.id
         
         return None
@@ -213,4 +222,42 @@ class SubstitutionCreateSerializer(serializers.ModelSerializer):
         service_order.status = 'PENDING_SUBSTITUTION'
         service_order.save()
         
+        return substitution
+
+
+class SubstitutionInitiateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceOrderSubstitution
+        fields = [
+            'service_order',
+            'initiated_by',
+            'outgoing_specialist_id',
+            'outgoing_specialist_name',
+            'reason',
+        ]
+    
+    def validate(self, data):
+        service_order = data.get('service_order')
+        
+        if service_order.status not in ['ACTIVE', 'PENDING_SUBSTITUTION']:
+            raise serializers.ValidationError(
+                "Substitution can only be requested for active service orders"
+            )
+        
+        if data.get('outgoing_specialist_id') != service_order.current_specialist_id:
+            raise serializers.ValidationError(
+                "Outgoing specialist must be the current specialist"
+            )
+        
+        return data
+    
+    def create(self, validated_data):
+        validated_data['status'] = 'PENDING_SUPPLIER'
+        
+        substitution = super().create(validated_data)
+        
+        service_order = substitution.service_order
+        service_order.status = 'PENDING_SUBSTITUTION'
+        service_order.save()
+
         return substitution

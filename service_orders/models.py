@@ -189,9 +189,9 @@ class ServiceOrderSubstitution(models.Model):
     outgoing_specialist_name = models.CharField(max_length=255)
     
     # Replacement Specialist
-    incoming_specialist_id = models.CharField(max_length=50)
-    incoming_specialist_name = models.CharField(max_length=255)
-    incoming_specialist_daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    incoming_specialist_id = models.CharField(max_length=50, blank=True)
+    incoming_specialist_name = models.CharField(max_length=255, blank=True)
+    incoming_specialist_daily_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     
     # Reason for substitution
     reason = models.CharField(max_length=30, choices=REASON_CHOICES)

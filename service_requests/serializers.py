@@ -41,6 +41,16 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
     
 
 class ServiceOfferSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(
+        source='service_request.title',
+        read_only=True
+    )
+    role = serializers.CharField(
+        source='service_request.role_name',
+        read_only=True
+    )
+    duration = serializers.SerializerMethodField()
+
     class Meta:
         model = ServiceOffer
         fields = "__all__"
@@ -49,3 +59,6 @@ class ServiceOfferSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+    
+    def get_duration(self, obj):
+        return f"{obj.service_request.start_date} to {obj.service_request.end_date}"

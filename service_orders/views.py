@@ -116,7 +116,6 @@ class ServiceOrderExtensionViewSet(viewsets.ModelViewSet):
         extension = self.get_object()
         data = request.data
         user_role = data.get('user_role', None)
-        print('user role......................', user_role)
 
         if not user_role or user_role != "SUPPLIER_REP":
             return Response(
@@ -124,7 +123,6 @@ class ServiceOrderExtensionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        print("extension status -----------------------", extension.status)
         if extension.status not in ['PENDING_SUPPLIER']:
             return Response(
                 {'error': 'Extension is not pending supplier approval'},
@@ -188,6 +186,21 @@ class ServiceOrderSubstitutionViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return SubstitutionCreateSerializer
         return SubstitutionDetailSerializer
+    
+        
+    @action(detail=False, methods=['post'])
+    def initiate(self, *arg, **kwargs):
+        serializer = SubstitutionInitiateSerializer(data=self.request.data)
+
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        substitution = serializer.save()
+        response = SubstitutionDetailSerializer(substitution)
+        return Response(response.data, status=status.HTTP_201_CREATED)
 
     
     @action(detail=True, methods=['post'])
