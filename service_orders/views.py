@@ -15,25 +15,8 @@ class ServiceOrderViewSet(viewsets.ModelViewSet):
     queryset = ServiceOrder.objects.all()
     permission_classes = [AllowAny]
     
-    # Filterable fields
-    filterset_fields = [
-        'status',
-        'supplier_name',
-        'current_specialist_name',
-        'role',
-        'domain',
-    ]
-    
-    # Searchable fields
-    search_fields = [
-        'id',
-        'title',
-        'current_specialist_name',
-        'supplier_name',
-    ]
-    
     # Ordering
-    ordering_fields = ['start_date', 'current_end_date', 'created_at']
+    ordering_fields = ['created_at']
     ordering = ['-created_at']
 
     def get_queryset(self):

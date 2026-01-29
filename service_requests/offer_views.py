@@ -245,8 +245,8 @@ class ServiceOfferViewSet(
         if offer.status == 'ACCEPTED' or decision == "final_approval":
             service_order = ServiceOrder.objects.create(
                 title=offer.service_request.title,
-                service_request_id=offer.service_request.id,
-                winning_offer_id=offer.id,
+                service_request_id=str(offer.service_request.id),
+                winning_offer_id=str(offer.id),
                 supplier_id=offer.provider_id,
                 start_date=offer.service_request.start_date,
                 current_end_date=offer.service_request.end_date,

@@ -161,11 +161,6 @@ class ExtensionCreateSerializer(serializers.ModelSerializer):
 # SUBSTITUTION SERIALIZERS
 # ====================
 class SubstitutionDetailSerializer(serializers.ModelSerializer):
-    service_order_title = serializers.CharField(
-        source='service_order.title',
-        read_only=True
-    )
-    
     class Meta:
         model = ServiceOrderSubstitution
         fields = '__all__'
