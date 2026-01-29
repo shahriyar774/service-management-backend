@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.conf import settings
 
-from .models import ServiceOffer
+from .models import *
 from .serializers import ServiceOfferSerializer
 from service_orders.models import ServiceOrder
 from flowable_client import *
@@ -243,7 +243,7 @@ class ServiceOfferViewSet(
 
         # create service order
         if offer.status == 'ACCEPTED' or decision == "final_approval":
-            service_order = ServiceOrder.objects.create(
+            ServiceOrder.objects.create(
                 title=offer.service_request.title,
                 service_request_id=str(offer.service_request.id),
                 winning_offer_id=str(offer.id),
@@ -263,6 +263,14 @@ class ServiceOfferViewSet(
                 original_contract_value=offer.total_cost,
                 current_contract_value=offer.total_cost,
             )
+
+            try:
+                project_req = ProjectRequest.objects.order_by('created_at').first()
+                if project_req:
+                    project_req.specialist_id = offer.specialist_id
+                    project_req.save()
+            except:
+                pass
         
         return Response({
             'message': f'Initial validation {decision} successfully',

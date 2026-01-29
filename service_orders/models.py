@@ -203,11 +203,6 @@ class ServiceOrderSubstitution(models.Model):
     class Meta:
         ordering = ['-created_at']
     
-    def approve(self):
-        self.status = 'APPROVED'
-        self._apply_substitution()
-        self.save()
-    
     def reject(self, reason):
         self.rejection_reason = reason
         self.status = 'REJECTED'
@@ -216,12 +211,3 @@ class ServiceOrderSubstitution(models.Model):
         service_order = self.service_order
         service_order.status = 'ACTIVE'
         service_order.save()
-    
-    def _apply_substitution(self):
-        service_order = self.service_order
-        service_order.current_specialist_id = self.incoming_specialist_id
-        service_order.current_specialist_name = self.incoming_specialist_name
-        service_order.daily_rate = self.incoming_specialist_daily_rate
-        service_order.status = 'ACTIVE'
-        service_order.save()        
-        self.save()

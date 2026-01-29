@@ -51,3 +51,11 @@ class ServiceOffer(models.Model):
     notes        = models.TextField(blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
     updated_at   = models.DateTimeField(auto_now=True)
+
+
+class ProjectRequest(models.Model):
+    project_id = models.CharField(max_length=128)
+    project_name = models.CharField(max_length=128)
+    specialist_id = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    

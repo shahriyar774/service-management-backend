@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ServiceRequest, ServiceOffer
+from .models import *
 
 
 class ServiceRequestSerializer(serializers.ModelSerializer):
@@ -62,3 +62,10 @@ class ServiceOfferSerializer(serializers.ModelSerializer):
     
     def get_duration(self, obj):
         return f"{obj.service_request.start_date} to {obj.service_request.end_date}"
+    
+
+class ProjectRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectRequest
+        fields = '__all__'
+        read_only_fields = ['id', 'created_at',]

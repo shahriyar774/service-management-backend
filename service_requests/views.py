@@ -5,8 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import ServiceRequest
-from .serializers import ServiceRequestSerializer
+from .models import *
+from .serializers import *
 from flowable_client import *
 
 
@@ -209,3 +209,13 @@ class ServiceRequestViewSet(
         return Response({
             'message': f'Initial validation {decision} successfully',
         }, status=status.HTTP_200_OK)
+    
+
+class ProjectRequestViewSet(viewsets.ModelViewSet):
+    queryset = ProjectRequest.objects.all()
+    serializer_class = ProjectRequestSerializer
+    permission_classes = [AllowAny]
+
+    # Ordering
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']

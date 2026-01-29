@@ -189,8 +189,13 @@ class ServiceOrderSubstitutionViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def approve_substitution(self, request, pk=None):
         substitution = self.get_object()
+        service_order = substitution.service_order
+
         data = request.data
         user_role = data.get('user_role', None)
+        incoming_specialist_id = data.get('incoming_specialist_id', None)
+        incoming_specialist_name = data.get('incoming_specialist_name', None)
+        incoming_specialist_daily_rate = data.get('incoming_specialist_daily_rate', None)
         
         if not user_role or user_role not in ["SUPPLIER_REP", "PROJECT_MANAGER"]:
             return Response(
@@ -204,8 +209,20 @@ class ServiceOrderSubstitutionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        if user_role == 'SUPPLIER_REP' and incoming_specialist_id and incoming_specialist_name and incoming_specialist_daily_rate:
+            substitution.incoming_specialist_id = incoming_specialist_id
+            substitution.incoming_specialist_name = incoming_specialist_name
+            substitution.incoming_specialist_daily_rate = incoming_specialist_daily_rate
+            
+            service_order.current_specialist_id = incoming_specialist_id
+            service_order.current_specialist_name = incoming_specialist_name
+            service_order.daily_rate = incoming_specialist_daily_rate
+        
         # Approve the substitution
-        substitution.approve()
+        substitution.status = 'APPROVED'
+        service_order.status = 'ACTIVE'
+        service_order.save()        
+        substitution.save()
         
         response_serializer = SubstitutionDetailSerializer(substitution)
         return Response(response_serializer.data)
