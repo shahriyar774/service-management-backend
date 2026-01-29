@@ -194,6 +194,7 @@ class ServiceRequestViewSet(
                 raise Exception(f"Failed to update 3rd party API: {str(e)}")
 
         try:
+            print("completing task.........")
             complete_task(
                 task_id=task_id,
                 decision=decision

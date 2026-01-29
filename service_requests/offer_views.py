@@ -39,6 +39,7 @@ class ServiceOfferViewSet(
                 params=params,
                 auth=settings.FLOWABLE_AUTH
             )
+            print('called execution get request............')
 
             if exec_response.status_code != 200:
                 return Response({
@@ -47,6 +48,8 @@ class ServiceOfferViewSet(
                 }, status=400)
             
             executions = exec_response.json().get('data', [])
+            
+            print('got execution data.....and will look for wait Trigger')
 
             # Step 2: Find the execution waiting at the message event
             waiting_execution = None
@@ -61,6 +64,8 @@ class ServiceOfferViewSet(
                     'error': 'No execution found waiting at message event',
                     'availableExecutions': executions
                 }, status=404)
+            
+            print('got wait Trigger...........and will trigger msg envt')
             
             execution_id = waiting_execution['id']
 
@@ -83,6 +88,8 @@ class ServiceOfferViewSet(
                 headers={'Content-Type': 'application/json'},
                 auth=settings.FLOWABLE_AUTH
             )
+
+            print('triggered msg envt....')
             
             if trigger_response.status_code in [200, 201]:
                 return Response({

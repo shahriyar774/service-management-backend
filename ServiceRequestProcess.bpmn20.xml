@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:flowable="http://flowable.org/bpmn" 
+    targetNamespace="ServiceManagement">
+
+  <!-- Message definition for API trigger -->
+  <message id="apiTriggerMessage" name="ApiTriggerMessage" />
+
+  <process id="serviceRequestProcess" name="External Expert Procurement" isExecutable="true">
+    
+    <startEvent id="startRequest" name="Initiate Request" flowable:initiator="projectManager" />
+
+    <sequenceFlow id="flow1" sourceRef="startRequest" targetRef="procurementValidation" />
+
+    <userTask id="procurementValidation" name="Internal Validation" flowable:candidateGroups="procurement" />
+
+    <sequenceFlow id="flow2" sourceRef="procurementValidation" targetRef="validationGateway" />
+
+    <exclusiveGateway id="validationGateway" name="Approved?" />
+
+    <sequenceFlow id="flowRejected" name="Rejected" sourceRef="validationGateway" targetRef="startRequest">
+      <conditionExpression xsi:type="tFormalExpression">${validationResult == 'rejected'}</conditionExpression>
+    </sequenceFlow>
+
+    <sequenceFlow id="flowApproved" name="Approved" sourceRef="validationGateway" targetRef="waitForApiTrigger">
+      <conditionExpression xsi:type="tFormalExpression">${validationResult == 'approved'}</conditionExpression>
+    </sequenceFlow>
+
+    <!-- Intermediate Message Catch Event - waits for API call -->
+    <intermediateCatchEvent id="waitForApiTrigger" name="Wait for API Call">
+      <messageEventDefinition messageRef="apiTriggerMessage" />
+    </intermediateCatchEvent>
+
+    <sequenceFlow id="flowToReceiveOffers" sourceRef="waitForApiTrigger" targetRef="receiveOffers" />
+
+    <userTask id="receiveOffers" name="Receive Supplier Offers" flowable:candidateGroups="suppliers" />
+
+    <sequenceFlow id="flow3" sourceRef="receiveOffers" targetRef="evaluateOffers" />
+
+    <userTask id="evaluateOffers" name="Evaluate &amp; Select Offer" flowable:candidateGroups="resourcePlanners" />
+
+    <sequenceFlow id="flow4" sourceRef="evaluateOffers" targetRef="procurementFinalCheck" />
+
+    <userTask id="procurementFinalCheck" name="Verify Selection" flowable:candidateGroups="projectManager" />
+
+    <sequenceFlow id="flow5" sourceRef="procurementFinalCheck" targetRef="finalizeOrder" />
+
+    <serviceTask id="finalizeOrder" name="Generate Service Order" flowable:type="http">
+      <extensionElements>
+        <flowable:field name="requestMethod">
+          <flowable:string><![CDATA[POST]]></flowable:string>
+        </flowable:field>
+        <flowable:field name="requestUrl">
+          <flowable:string><![CDATA[https://httpbin.org/post]]></flowable:string>
+        </flowable:field>
+        <flowable:field name="requestHeaders">
+          <flowable:string><![CDATA[Content-Type: application/json]]></flowable:string>
+        </flowable:field>
+        <flowable:field name="requestBody">
+          <flowable:string><![CDATA[{
+            "processInstanceId": "${execution.processInstanceId}",
+            "verifiedBy": "${verifiedBy}",
+            "finalVerification": "${finalVerification}"
+          }]]></flowable:string>
+        </flowable:field>
+      </extensionElements>
+    </serviceTask>
+
+    <sequenceFlow id="flow6" sourceRef="finalizeOrder" targetRef="endRequest" />
+
+    <endEvent id="endRequest" name="Process Complete" />
+
+  </process>
+</definitions>

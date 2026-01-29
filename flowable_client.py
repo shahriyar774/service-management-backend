@@ -127,17 +127,21 @@ def complete_task(*, task_id, decision):
     }
         
     try:
+        print('calling flowable ccomplete task api ...............')
         response = requests.post(
             url,
             json=payload,
             auth=settings.FLOWABLE_AUTH,
             timeout=10
         )
+        print('complete task response ...............')
+        print(response)
         response.raise_for_status()
         
         return True
         
     except requests.exceptions.RequestException as e:
+        print('complete task excepption.................')
         raise Exception(f"Flowable task completion failed: {str(e)}")
     
 
